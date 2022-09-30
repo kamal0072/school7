@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index</title>
+    <style>
+    </style>
+</head>
+<body>
+    <h1>Group Name: {{group_name}}</h1>
+    <hr>
+    <textarea id="chat-log" cols="100" rows="20">
+        {% for chat in chat %}
+            {{chat.id}}
+            {{chat.content}}
+            {{chat.timestamp}}
+            {{chat.group}}
+        {% endfor %}
+        
+    </textarea>
+    <input id="chat-message-input" type="text" size="103"> <br> <br>
+    <input id="chat-message-submit" type="button" value="send">
+
+    {{group_name|json_script:"group-name"}}
+    <h1 id="ct"></h1>
+    <script>
+        const groupName=JSON.parse(document.getElementById
+        ("group-name").textContent)
+        console.log("Group Name: ", groupName)
+        
+        var ws = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/jwc/'
+            + groupName
+            + '/'
+            )
+            //console.log("Web Socket Url: ", ws)
+            //console.log("Web Socket Url: ", ws.url)
+
+            ws.onopen= function (event){
+                console.log("Web Socket Connection open...")
+            };
+            ws.onmessage= function(event){
+                console.log("Message Reciened from server!!!",event.data)
+                const data = JSON.parse(event.data)
+                console.log("Data; ",data)
+                document.querySelector("#chat-log").value+= (data.message + "\n")
+            };
+
+            ws.onclose= function (event){
+                console.error("ChatSocket closed Unexpectedly...")
+            };
+
+            document.getElementById("chat-message-submit").onclick = function(event){
+                const messageInputdom=document.getElementById("chat-message-input")
+                const message= messageInputdom.value
+                ws.send(JSON.stringify({
+                    "msg": message
+                }))
+                messageInputdom.value = "";
+            } 
+    </script>
+</body>
+</html>
